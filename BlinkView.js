@@ -55,7 +55,7 @@ export default class BlinkView extends Component
 
       this.state = {
         delay     : props && props.delay || 1500,
-        blinkAnim : new Animated.Value( 0 )
+        blinkAnim : new Animated.Value( 0.5 )
       };
     }
     catch ( err )
@@ -75,7 +75,7 @@ export default class BlinkView extends Component
         {
           this.state.blinkAnim.stopAnimation();
           Animated.timing( this.state.blinkAnim, {
-            toValue   : this.state.blinkAnim._value === 0 ? 1 : 0,
+            toValue   : this.state.blinkAnim._value === 0.5 ? 1 : 0.5,
             duration  : this.state.delay-1
           }).start();
         }, this.state.delay+1 );
@@ -86,7 +86,27 @@ export default class BlinkView extends Component
       console.warn( err );
     }
   }
-
+  componentDidUpdate (prevProps, prevState) {
+    try
+    {
+      if ( prevProps.blinking !== this.props.blinking && this.props.blinking )
+      {
+        clearInterval( this._onDelay );
+        this._onDelay = setInterval( ():void =>
+        {
+          this.state.blinkAnim.stopAnimation();
+          Animated.timing( this.state.blinkAnim, {
+            toValue   : this.state.blinkAnim._value === 0.5 ? 1 : 0.5,
+            duration  : this.state.delay-1
+          }).start();
+        }, this.state.delay+1 );
+      }
+    }
+    catch ( err )
+    {
+      console.warn( err );
+    }
+  }
   componentWillUnmount():void
   {
     try
@@ -99,28 +119,21 @@ export default class BlinkView extends Component
     }
   }
 
-  render():any
+  render ()
   {
-    try
-    {
-      const isBlinking:bolean = this.props && this.props.blinking || true;
-      const Element:any = ( ( isBlinking === true ) ? Animated.createAnimatedComponent( this.props && this.props.element || View ) : this.props && this.props.element || View );
-
+      const isBlinking:bolean = this.props && this.props.blinking || false;
+      const Element:any = ( ( isBlinking === true ) ?
+        Animated.createAnimatedComponent( this.props && this.props.element ) : this.props && this.props.element )
       return  (
         <Element
           {...this.props}
           style = {[this.props.style, { opacity: ( isBlinking === true ) ? this.state.blinkAnim : 1 } ]}>
-          {this.props && this.props.children || null}
+          {this.props && this.props.children}
         </Element>
       )
     }
-    catch ( err )
-    {
-      console.warn( err );
-    }
-    return (
-      this.props && this.props.children || <View />
-    );
-  }
+    // return (
+    //   this.props && this.props.children || <View />
+    // );
 
 }
